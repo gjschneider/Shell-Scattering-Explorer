@@ -1,18 +1,17 @@
-name: Build Executables for All OS
+name: Build and Release Shell Explorer
 
+# This triggers the action whenever you push a "tag" (e.g., v1.0, v1.1)
 on:
   push:
-    branches:
-      - main
+    tags:
+      - 'v*'
   workflow_dispatch:
 
 jobs:
   build:
-    # This "matrix" tells GitHub to run this exact job three times, 
-    # once on each of the operating systems listed below.
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
+        os: [ubuntu-latest, macos-14, windows-latest]
 
     runs-on: ${{ matrix.os }}
 
@@ -28,17 +27,46 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install pyinstaller
-          # Add other pip installs here if your script needs them
+          pip install pyinstaller numpy matplotlib
 
       - name: Compile with PyInstaller
-        # Replace 'your_script_name.py' with your actual file name
-        run: pyinstaller --onefile shell_explorer.py
+        run: pyinstaller --onefile --windowed shell_explorer.py
 
-      - name: Upload the executable
+      # This step temporarily uploads the files so the Release job can find them
+      - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          # This names the download file based on the OS it was built on
           name: Executable-${{ matrix.os }}
-          # This grabs everything in the dist folder, regardless of file extension
           path: dist/*
+
+  release:
+    # This ensures the release only happens AFTER all 3 builds are finished
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write 
+
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: dist
+
+      - name: Publish to GitHub Releases
+        uses: softprops/action-gh-release@v2
+        with:
+          # This grabs the files from all 3 operating systems
+          files: dist/**/* ```
+
+### How to Trigger This New Workflow
+
+Notice that the `on:` section at the top has changed. Instead of running every time you tweak the code, it now runs when you create a **tag**. This prevents you from creating a new official release for every minor typo fix.
+
+When you are ready to publish a new version of your app:
+1. Go to your repository on GitHub.
+2. Click on **Releases** on the right side of the screen.
+3. Click **Draft a new release**.
+4. Click **Choose a tag** and type `v1.0` (or `v1.1`, `v2.0`, etc.), then click **Create new tag**.
+5. Click **Publish release**.
+
+GitHub will immediately launch your 3 cloud computers, compile your Python code for Windows, Mac, and Linux, and automatically attach the final `.exe` and executable files directly to that release page for your users to download.
