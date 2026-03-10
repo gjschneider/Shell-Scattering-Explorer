@@ -58,15 +58,3 @@ jobs:
           # This grabs the files from all 3 operating systems
           files: dist/**/* ```
 
-### How to Trigger This New Workflow
-
-Notice that the `on:` section at the top has changed. Instead of running every time you tweak the code, it now runs when you create a **tag**. This prevents you from creating a new official release for every minor typo fix.
-
-When you are ready to publish a new version of your app:
-1. Go to your repository on GitHub.
-2. Click on **Releases** on the right side of the screen.
-3. Click **Draft a new release**.
-4. Click **Choose a tag** and type `v1.0` (or `v1.1`, `v2.0`, etc.), then click **Create new tag**.
-5. Click **Publish release**.
-
-GitHub will immediately launch your 3 cloud computers, compile your Python code for Windows, Mac, and Linux, and automatically attach the final `.exe` and executable files directly to that release page for your users to download.
